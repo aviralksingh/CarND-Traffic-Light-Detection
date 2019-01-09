@@ -16,7 +16,6 @@ flags.DEFINE_string('output_path', None, 'Path to output record file, if split_t
 flags.DEFINE_float('split_train_test', 0.25, 'If supplied specifies the amount of samples to use for evaluation')
 
 tf.app.flags.mark_flag_as_required('data_dir')
-tf.app.flags.mark_flag_as_required('labels_dir')
 tf.app.flags.mark_flag_as_required('labels_map_path')
 tf.app.flags.mark_flag_as_required('output_path')
 
@@ -87,6 +86,8 @@ def create_tf_record(label_files, data_dir, labels_map, output_path):
 def main(unused_argv):
 
     data_dir = FLAGS.data_dir
+    if FLAGS.labels_dir is None:
+        FLAGS.labels_dir = os.path.join(data_dir, 'labels')
     labels_map = label_map_util.get_label_map_dict(FLAGS.labels_map_path)
     label_files_train = os.listdir(FLAGS.labels_dir)
     label_files_train = [os.path.join(FLAGS.labels_dir, file_name) for file_name in label_files_train]
@@ -103,10 +104,12 @@ def main(unused_argv):
         file_name_split = os.path.splitext(os.path.basename(output_path_train))
         
         if file_name_split[1] == '':
-            file_name_split = (file_name_split[0], 'record')
+            file_name_split = (file_name_split[0], '.record')
 
-        output_path_train = os.path.join(dir_path, '{}_train.{}'.format(file_name_split[0], file_name_split[1]))
-        output_path_eval = os.path.join(dir_path, '{}_eval.{}'.format(file_name_split[0], file_name_split[1]))
+        print(file_name_split)
+
+        output_path_train = os.path.join(dir_path, '{}_train{}'.format(file_name_split[0], file_name_split[1]))
+        output_path_eval = os.path.join(dir_path, '{}_eval{}'.format(file_name_split[0], file_name_split[1]))
     
     create_tf_record(label_files_train, data_dir, labels_map, output_path_train)
     print('TF record file for training created with {} samples: {}'.format(len(label_files_train), output_path_train))
